@@ -9,8 +9,6 @@ library(sp)
 library(ggplot2)
 library(dplyr)
 library(raster)
-library(rgdal)
-library(velox)
 library(rgeos)
 
 
@@ -45,30 +43,10 @@ ggplot() +
   geom_sf(data=waterholes, color= "blue", size=3)+
   ggtitle("Roads and Waterholes in Hwange NP")
 
-#man, this map looks terrible. how can we change the extent?
-
-#first, let's get the bounding box for the park
-park_extent <- st_bbox(Hwange)
-
-#now we can provide these bounding box coordinates to coord_sf
-#here, our coordinate system is WGS 1984 UTM Zone 35S (EPSG 32735)
-ggplot() +
-  geom_sf(data = Hwange, color = "darkgreen", fill = "white", size=2) +
-  geom_sf(data=roads, color = "black", size=1)+
-  geom_sf(data=waterholes, color= "blue", size=3)+
-  ggtitle("Roads and Waterholes in Hwange NP")+
-  coord_sf(crs=32735, xlim=c(park_extent[[1]], park_extent[[3]]), ylim=c(park_extent[[2]], park_extent[[4]]))
-
-#that's better!
-
 #checking the coordinate systems reveals our "roads" layer is WGS 1984. 
 crs(roads)
 #How can we convert to WGS 1984 UTM Zone 35S?
 roads_UTM <- st_transform(roads, crs = 32735)
-
-#now, before reading in the elevation data, let's check it out first
-#IGNORE WARNING that "statistics are not supported by this driver"
-GDALinfo("Example_Zimbabwe/aster_image_20160624.tif")
 
 #now let's read in the elevation (it's an aster image)
 elev <- raster("Example_Zimbabwe/aster_image_20160624.tif") 
@@ -105,21 +83,8 @@ Hwange_WGS <- st_transform(Hwange, crs=4326)
 plot(Hwange_WGS[1], add=T)
 
 #ok, so there is a lot of extra raster that we don't want to work with
-#let's use package velox to make raster processing a bit faster
-
-#we'll crop to hwange extent to make things like reprojecting go faster
-#we'll get the extent first
-extent(Hwange_WGS)
-#this line creates a vector from the four numbers within the extent of Hwange_WGS
-cropext <- c(extent(Hwange_WGS)[1:4])
-
-#in order to crop a raster, we need to run through a series of steps
-#first, we make elev a VeloxRaster object
-elev_vx <- velox(elev)
-#then we do the crop
-elev_vx$crop(cropext)
-#then we convert VeloxRaster object to Raster object
-elev_crop <- elev_vx$as.RasterLayer(band=1)
+#let's crop it to make raster processing a bit faster
+elev_crop <- crop(elev, Hwange_WGS)
 
 #let's see what it looks like now!
 #we will plot with the Hwange boundary in WGS 84
@@ -147,65 +112,9 @@ plot(Hwange[1], border="black",col=NA, lwd=2,add=T)
 #set the GeoTIFF tag for NoDataValue to -9999, the National Ecological Observatory Network’s (NEON) standard NoDataValue
 writeRaster(elev_crop_UTM, "Example_Zimbabwe/elev_Hwange.tif", format="GTiff", overwrite=T, NAflag=-9999)
 
-#what if we wanted to plot in ggplot?
-#it's just a bit trickier bc we have to convert the raster to a data frame first
-elev_df <- as.data.frame(elev_crop_UTM, xy=TRUE)
-
-#now we can plot as we did for the vector data, but take note of "geom_raster" argument
-#also, note that we are taking the third column of "elev_df" as our color fill
-#as this is the column that has our raster values
-ggplot() +
-  geom_raster(data = elev_df , aes(x = x, y = y, fill = elev_df[,3])) +
-  scale_fill_viridis_c() +
-  geom_sf(data = Hwange[1], fill=NA, color="black", size = 1) +
-  coord_sf()
-
-#and a spread of data values?
-#we can make a histogram within ggplot too
-#can help you determine if you have wonky values
-#values outside of an expected range can be considered suspect
-ggplot() +
-  geom_histogram(data = elev_df, aes(elev_df[,3]), bins=40)  #IGNORE WARNING
-
-#now let's read in our MODIS data
-#we are using the 44B product, or Vegetation Continuous Fields; 250-m resolution
-#the data were originally provided to us as an hdf4 file
-
-###### IMPORTANT ######
-#For those of you working with MODIS data, and remote sensing data in general, it is wise to 
-#install GDAL for batch tasks, particularly with odd file extensions such as hdf4 (a common
-#file format used by NASA, and in my experience with MODIS data)
-
-#We will not be running GDAL in this workshop, but the below lines will work to successfully import
-#an .hdf4 file after downloading GDAL (with hdf4 support) through this link:
-#https://trac.osgeo.org/osgeo4w/
-
-#Please uncomment the below (L. xx-xx) to see how this would work in GDAL
-
-# library(gdalUtils)
-# 
-# #creates a list of the subdatasets within the hdf4 MODIS files 
-# subdata <- get_subdatasets("Example_Zimbabwe/MOD44B.A2016065.h20v10.006.2017081121817.hdf")
-# 
-# #ok, let's see what those subdatasets are
-# subdata
-# subdata[1]
-# 
-# #i am only interested in percent tree cover, which is the first subdataset
-# #now let's use GDAL to convert to a tif!
-# #this is the .tif that we will use in the workshop
-# 
-# gdal_translate(subdata[1], dst_dataset = "PercVegCover_2016.tif")
-###### END OF GDAL SECTION THAT IS NOT PART OF WORKSHOP ######
-
-#BACK TO THE WORKSHOP NOW!
-#let's read in this .tif as a raster
-
+#let's read in percent vegetation now
 percveg <- raster("Example_Zimbabwe/PercVegCover_2016.tif")
 crs(percveg)
-#IGNORE WARNING - this crs is correct
-#modis uses a sinusoidal coordinate system that can be found here:
-#https://spatialreference.org/ref/sr-org/modis-sinusoidal/
 
 plot(percveg)
 #ok, this plot is weird bc we are seeing values >100, which represent various forms of NA
@@ -214,27 +123,11 @@ plot(percveg)
 percveg[percveg > 100] <- NA
 plot(percveg)
 
-#ok so now we have to reproject to WGS 1984 UTM Zone 35S, like the other layers
-#normally i would crop first before projecting, but the resolution here is quite coarse (250 m)
-#so it shouldn't take too long
-
-#takes ~1 minute
-percveg_UTM_S <- projectRaster(percveg, res=250, crs="+init=epsg:32735")
-
 #let's see what it looks like with Hwange NP
-plot(percveg_UTM_S)
 plot(Hwange[1], border="black",col=NA, lwd=2,add=T)
 
-#let's crop it now, to get rid of the raster we don't need
-#using the same steps we used earlier in this exercise
-#get the extent for Hwange
-cropext <- c(extent(Hwange)[1:4]) 
-#convert to VeloxRaster 
-veg_vx <- velox(percveg_UTM_S)
-#perform cropping using the provided extent
-veg_vx$crop(cropext)
-#convert to Raster object
-veg_crop <- veg_vx$as.RasterLayer(band=1)
+#let's crop it to Hwange NP
+veg_crop <- crop(percveg, Hwange)
 
 #let's see what it looks like now!
 plot(veg_crop)
@@ -254,25 +147,6 @@ extent(elev_crop_UTM)
 elev <- resample(elev_crop_UTM, veg_crop, method="bilinear")
 stack <- stack(veg_crop, elev)
 #yay, it works now!
-
-#a quick aside: let's say that we'd like to have five categories of percent land cover rather than continuous values
-#for example, 0-10 = 1, 10-20 = 2, 20-30 = 3, 30-40 = 4, 40-50 = 5
-#in this case, we need to build a reclassification matrix and then use the reclassify function
-
-#let's set up those reclassification values
-reclass_vals <- c(0,  10, 1, 
-                  10, 20, 2,
-                  20, 30, 3,
-                  30, 40, 4,
-                  40, 50, 5)
-#now let's make it a matrix with a certain number of columns, and that we are filling by row
-reclass_mat <- matrix(reclass_vals, ncol=3, byrow=TRUE)
-#now let's reclassify those values!
-veg_reclass <- reclassify(veg_crop, reclass_mat)
-
-#let's see what it looks like now!
-plot(veg_reclass)
-plot(Hwange[1], border="black",col=NA,lwd=2,add=T)
 
 #let's move on to getting distances from roads and waterholes
 #first, let's clip roads to hwange extent
@@ -318,15 +192,6 @@ plot(waterholes[1], col="black",lwd=2,add=T)
 #let's write this to raster to we can use it later
 writeRaster(dist_waterhole, "Dist_Waterhole_Hwange.tif", overwrite=T)
 
-#quick foray into neighborhood statistics
-#let's take the mean elevation using a neighborhood of 15 x 15 cells 
-#we are using 15 cells here to show how the values are "smoothed out" visually
-elev_focal <- focal(elev, w=matrix(1,15,15), fun="mean")
-#let's see the original
-plot(elev)
-#and now let's see the smoothed out version
-plot(elev_focal)
-
 #now we are able to make a raster stack of all four rasters! 
 stack <- stack(veg_crop, elev, dist_road, dist_waterhole )
 #what does the stack look like?
@@ -361,11 +226,3 @@ writeRaster(stack, "raster_stack.tif", options="INTERLEAVE=BAND", overwrite=TRUE
 stack_import<- stack("raster_stack.tif")
 elev <- subset(stack_import,subset=2)
 plot(elev)
-
-#please see links in slides for how to do "other" tasks that we don't have enough time to cover
-#(1) merging rasters together
-#(2) basic raster calculations (adding, subtracting)
-#(3) convert polygon to raster
-#(4) calculating more patch, class, and landscape-level metrics a la FRAGSTATS
-#(5) calculating proportion of discrete land cover types within polygons (can be grids or
-#buffers around points)
