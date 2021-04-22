@@ -18,9 +18,6 @@ library(rnaturalearth)
 #read in the shapefile with st_read
 PAs <- st_read("Example_Honduras/Honduras_Protected_Areas_2007.shp")
 
-#let's see what the columns of the attribute table are
-names(PAs)
-
 #alternatively, to see the top six rows of data
 head(PAs)
 
@@ -29,16 +26,6 @@ st_crs(PAs)
 
 #a means of getting the most basic info on the coordinate system
 crs(PAs)
-
-#What is our extent?
-st_bbox(PAs) 
-
-#how many features are in the object?
-nrow(PAs)
-
-#can also get all this information just by running the name of the multipolygon
-PAs
-
 
 #let's plot this multipolygon
 
@@ -139,24 +126,6 @@ ggplot() +
   geom_sf(data = honduras_roads_UTM, lwd = 1) +
   ggtitle("PAs that intersect roads in Honduras", subtitle = "Subtitle option if you want it!")
 
-#let's do one last thing with these PAs - create centroids and save them as .csv
-#centroids give us the central points of polygon features
-PA_centroids <- st_centroid(PAs)
-#IGNORE WARNING
-#this creates a whole new geometry type (points)
-
-#let's see what this looks like
-ggplot() + 
-  geom_sf(data = PAs, colour="darkgreen",fill="lightgreen", size = 1) +
-  geom_sf(data = honduras, fill=NA, size = 1) +
-  geom_sf(data=PA_centroids, colour="yellow", size=2)+
-  ggtitle("Centroids of PAs in Honduras")
-
-#and then save the centroid coordinates as .csv
-st_write(PA_centroids, "PA_centroids.csv", layer_options = "GEOMETRY=AS_XY", append=F)
-
-
-
 # ---- EXAMPLE: CAMERA TRAP LOCATIONS IN HONDURAS ---- ####
 
 
@@ -193,12 +162,6 @@ ggplot() +
 #now let's save this to a .shp if we want to use it in ArcMap 
 st_write(camlocs_sf,
          "camera_locations.shp", driver = "ESRI Shapefile", append=F) #IGNORE WARNING
-
-#let's first get a distance matrix between points
-#we supply the camlocs_sf twice so that we are getting a pairwise distance matrix from each
-#camera to all other cameras, including itself
-head(camlocs_sf)
-dist_matrix <- st_distance(camlocs_sf, camlocs_sf)
 
 #then let's create a buffer of 500 m around the camera trap locations
 cam_500m_buffer <- st_buffer(camlocs_sf, dist = 500)
@@ -293,12 +256,10 @@ ggplot() +
 
 ####---- SAMPLING TOOLS ----####
 
-
-
 #let's select the PA in honduras_detailed called "Pico Bonito - Zona Nucleo"
 PAs$NOMBRE
 
-#first we will use dplyr package to select the PA by name from the greater multipolygon object
+#first we will select the PA by name from the greater multipolygon object
 PicoBonito <- PAs[PAs$NOMBRE == "Pico Bonito-Zona Nucleo",]
 
 #let's create 100 random points within the PA for vegetation sampling
@@ -309,15 +270,6 @@ ggplot() +
   geom_sf(data = PicoBonito, color = "darkgreen", size=1.5) +
   geom_sf(data=random_points, color = "black", size=2)+
   ggtitle("100 Random Points in Pico Bonito NP")
-
-#let's try again with 100 regular points
-regular_points <- st_sample (PicoBonito, 100, type="regular")
-
-#what does this look like?
-ggplot() +
-  geom_sf(data = PicoBonito, color = "darkgreen", size=1.5) +
-  geom_sf(data=regular_points, color = "black", size=2)+
-  ggtitle("100 Regular Points in Pico Bonito NP")
 
 #then we will create a 16 km2 grid (4 km x 4 km) over the PA
 pico_16km2_grid <- st_make_grid(
@@ -336,35 +288,7 @@ ggplot() +
   geom_sf(data=pico_16km2_grid_isect, fill=NA, color = "black", size=2)+
   labs(title=expression(paste("16 km" ^{2}," Grid in Pico Bonito NP")))
 
-#what if we wanted to do hexagons instead?
-pico_16km2_grid_hex <- st_make_grid(
-  PicoBonito,
-  cellsize = 4000,
-  crs = 32616,
-  what = "polygons",
-  square = FALSE,
-  flat_topped = TRUE
-)
-
-#how can we see what this looks like?
-ggplot() +
-  geom_sf(data = PicoBonito, color = "darkgreen", size=1.5) +
-  geom_sf(data=pico_16km2_grid_hex, fill=NA, color = "darkblue", size=2)+
-  labs(title=expression(paste("16 km" ^{2}," Hexagon Grid in Pico Bonito NP")))
-
-#I like the way the hexagon grid looks. You are welcome to clip it if you'd like
 #What if we want to put in two camera traps at random locations within each hexagon?
-
-random_points <- st_sample(pico_16km2_grid_hex, size=2, type="random")
-
-#what does it look like?
-ggplot() +
-  geom_sf(data = PicoBonito, color = "darkgreen", size=1.5) +
-  geom_sf(data=pico_16km2_grid_hex, fill=NA, color = "darkblue", size=2)+
-  geom_sf(data=random_points, color = "red", size=2)+
-  labs(title=expression(paste("16 km" ^{2}," Hexagon Grid in Pico Bonito NP")))
-
-#oh no. what happened? we only have two points for the whole entire grid
 #we need to explicitly tell st_sample to sample within each of the 63 hexagons within the grid
 
 #let's see how many grids we have; yep, there are 63
