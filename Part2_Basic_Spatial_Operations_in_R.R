@@ -2,70 +2,14 @@
 library(sp)
 library(sf)
 library(raster)
-setwd("C:/Users/acheesem/Desktop/ESF/Classes Taught/GIS in R workshop")#Change to your working directory path
-
-##part 1
-#Make an object called obj with 1 element 'x'
-Obj<-"x"
-
-#run obj it will return 'x'
-Obj
-
-#Make a vector (NOTE this is not the same as a spatial vector data type)
-lis<-c(1,5,7)
-
-#inspect 'lis'
-lis
-
-#select the second item in the vector lis
-lis[2]
-
-#select items 2 through 3 in lis
-lis[c(2:3)]
-
-#select items 1 and 3 in the list
-lis[c(1,3)]
-
-#remove item 2 from lis, store in new object called 'lis2'
-lis2<-lis[-2]
-
-lis2# look at lis2
-
-#replace item 2 in lis with the number 25
-lis[2]<-25
-lis#look at lis
-
-#make a data frame called df
-df<-data.frame(letters=c("a","b","c"),numbers=lis)
-
-#inspect df
-df
-
-#inspect data
-head(df) #look at first few rows
-tail(df)#look at last few rows
-str(df)#look at data structure
-summary(df)#look at data summaries
-
-#look at numbers column
-df$numbers
-
-#look at numbers column using index
-df[,2]
-
-#look at row 3 in numbers column
-df[3,2]
-
-#Run calculations or operations on data
-#Take the mean of the numbers column
-mean(df$numbers)
-
+setwd("C:/Users/acheesem/Desktop/ESF/Workshop Taught/GIS in R workshop")#Change to your working directory path
 
 ###CAN WORK WITH SPATIAL DATA AS DATA FRAME 
 ##create unprojected spatial data 
   #NO PROJECTION - NOT GOOD
-data<-data.frame(long=c(-76.13332,-76.86515,-76.851651),
+data<-data.frame(long=c(-76.13332,-76.86515,-76.851651), # c() concatenates values separated by commas 
                  lat=c(42.85632,42.65465,42.51311))
+data#Inspect to see what data looks like
 
 #plot spatial data
 plot(data)
@@ -80,7 +24,6 @@ crdref <- crs("+init=epsg:4326")
 crdref
 
 #create spatial points class object names pts from data
-data#remember what data looks like?
 pts <- SpatialPoints(cbind(data$long,data$lat), proj4string=crdref)
 
 #inspect pts
@@ -95,7 +38,10 @@ att<-data.frame(site=c("Pond","River","Forest"),ID=1:nrow(data))
 #look at att
 att
 
-#use SpatialPOintsDataFrame() function to add attributes to points
+#use SpatialPointsDataFrame() function to add attributes to points
+#how do we do this?
+?SpatialPointsDataFrame# use the ? before a function to see which arguments are needed and their format!! 
+#really great for determining if sp or sf objects are required
 spdf<-SpatialPointsDataFrame(pts,data=att,proj4string = crdref)
 
 
@@ -124,6 +70,7 @@ geo_data<-data.frame(shp)
 geo_data
 
 ### create spatial class using sf package and geo_data
+?st_as_sf # see what arguments are required for st_as_sf
 sf.pts<-st_as_sf(geo_data, coords = c("coords.x1", "coords.x2"), crs = crs(shp))
 
 #inspect
@@ -143,6 +90,7 @@ st_write(nc, "myshapefile.shp", append=F)
 
 #####Raster package
 #create raster - define columns, rows, and crs 
+?raster #see what argumnets are required to make a raster
 r <- raster(ncol=13, nrow=10,crs=crs(shp))
 
 #assign values to raster
