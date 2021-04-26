@@ -191,10 +191,4 @@ ggplot(data = world)+
     scale_y_continuous(limits = c(20,50), breaks=(seq(-180,180,10)))+
     coord_sf()
   
-  
-  pdf(paste(unique(sub$species)[1],Sys.Date(),".pdf",sep=""),height=8,width=3) #print a pdf to your working directory of species i, 
-  #title it by species i and the date
-  plot(map) #you are plotting the map in the pdf
-  dev.off() #closing the graphics device for the pdf
-
-#look through the maps in pdfs or in RStudio
+ #look through the maps in pdfs or in RStudio

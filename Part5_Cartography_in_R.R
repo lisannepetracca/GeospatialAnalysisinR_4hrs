@@ -141,7 +141,7 @@ ggplot() +
 elev_df <- elev_df[!is.na(elev_df[,3]), ]
 
 ggplot() +
-  geom_raster(data = elev_df_fourgroups_noNA, aes(x = x, y = y, fill = elev_df[,3]))+
+  geom_raster(data = elev_df, aes(x = x, y = y, fill = elev_df[,3]))+
   scale_fill_viridis_c(na.value = 'red') 
 
 
