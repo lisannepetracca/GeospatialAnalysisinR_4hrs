@@ -4,7 +4,7 @@
 #then we will install other packages that *are* in the CRAN library
 #***IF IT ASKS TO RESTART R, YOU CAN SAY YES***
 install.packages(c("sp", "sf", "raster", "rgeos", "ggplot2", "units", "rnaturalearth",  "rnaturalearthdata", 
-                   "rgbif","viridis","ggspatial"))
+                   "rgbif","viridis","ggspatial","ellipsis","fansi","utf8"),dependencies = TRUE)
 #***RED TEXT DOES NOT MEAN IT DIDN'T WORK. THERE IS ONLY AN ISSUE IF YOU SEE SOMETHING LIKE "Error in install.packages>"***
 
 #now let's get these packages loaded into R
