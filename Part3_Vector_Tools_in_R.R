@@ -6,7 +6,6 @@ setwd("C:/Users/lspetrac/Desktop/Geospatial_Analysis_in_R")
 #and let's load all the libraries we need
 library(sf)
 library(ggplot2)
-library(dplyr)
 library(raster)
 library(units)
 library(rnaturalearth)
@@ -74,23 +73,17 @@ BigPAs <- PAs[PAs$area_km2 > 500,]
 #how many PAs are greater than 500 km2 in area?
 nrow(BigPAs)
 
-#We can also adjust our colors to give each PA a different color
-ggplot() + 
-  geom_sf(data = BigPAs, aes(color = factor(NOMBRE)), size = 1.5) +
-  labs(color = "Name") + #this gives name to legend
-  ggtitle("Large PAs in Honduras", subtitle = "Subtitle option if you want it!")
-
 #now let's add an outline of honduras, shall we?
 #fun little preview of using online data to get boundaries of countries (can do US states too!)
 countries <- ne_download(scale = "large", type = 'countries', returnclass="sf" )
-#if this line DOES NOT WORK, skip to L. 106, remove the #, and run that line
+#if this line DOES NOT WORK, skip to L. 93, remove the #, and run that line
 
 names(countries)
 #let's grab honduras from this sf object
 honduras <- countries[countries$NAME == "Honduras",]
 
 #the line to run if ne_download does not work
-# honduras <- st_read("Example_Honduras/Honduras_Border.shp")
+#honduras <- st_read("Example_Honduras/Honduras_Border.shp")
 
 #and let's plot!
 ggplot() + 
@@ -100,7 +93,7 @@ ggplot() +
   ggtitle("Large PAs in Honduras", subtitle = "Subtitle option if you want it!")
 
 #what if we are interested in selecting only those large PAs that intersect Honduras roads?
-#read in the shapefile with st_read
+#read in the roads shapefile with st_read
 honduras_roads <- st_read("Example_Honduras/Honduras_Roads_1999_CCAD.shp")
 
 #first, let's use st_length() to see how long these roads are
@@ -121,10 +114,12 @@ PAs_road_isect <- PAs[honduras_roads_UTM,]
 #while the new projection was necessary for the intersection, ggplot2 does not require vector data to be in the 
 #same projection; ggplot automatically converts all objects to the same CRS before plotting
 ggplot() + 
-  geom_sf(data = honduras, fill=NA, color="purple",size=1)+
+  geom_sf(data = honduras, fill=NA, color="darkgrey",size=1)+
   geom_sf(data = PAs_road_isect, color= "darkgreen",size = 1.5) +
   geom_sf(data = honduras_roads_UTM, lwd = 1) +
   ggtitle("PAs that intersect roads in Honduras", subtitle = "Subtitle option if you want it!")
+
+
 
 # ---- EXAMPLE: CAMERA TRAP LOCATIONS IN HONDURAS ---- ####
 
@@ -256,6 +251,7 @@ ggplot() +
 
 ####---- SAMPLING TOOLS ----####
 
+
 #let's select the PA in honduras_detailed called "Pico Bonito - Zona Nucleo"
 PAs$NOMBRE
 
@@ -286,23 +282,24 @@ pico_16km2_grid_isect <- st_intersection(pico_16km2_grid, PicoBonito)
 #how can we see what this looks like?
 ggplot() +
   geom_sf(data=pico_16km2_grid_isect, fill=NA, color = "black", size=2)+
+  geom_sf(data = PicoBonito, color = "darkgreen", fill=NA, size=1.5) +
   labs(title=expression(paste("16 km" ^{2}," Grid in Pico Bonito NP")))
 
-#What if we want to put in two camera traps at random locations within each hexagon?
-#we need to explicitly tell st_sample to sample within each of the 63 hexagons within the grid
+#What if we want to put in two camera traps at random locations within each grid?
+#we need to explicitly tell st_sample to sample within each of the 54 hexagons within the grid
 
-#let's see how many grids we have; yep, there are 63
-pico_16km2_grid_hex    #RED TEXT IS OK; DOES NOT MEAN ERROR
+#let's see how many grids we have; yep, there are 54
+pico_16km2_grid_isect    #RED TEXT IS OK; DOES NOT MEAN ERROR
 
 #let's try again, supplying a vector such that it knows to sample 2 points
 #in each of the 63 polygons 
-random_points <- st_sample (pico_16km2_grid_hex, size=rep(2,63), type="random")
+random_points <- st_sample(pico_16km2_grid_isect, size=rep(2,54), type="random")
 
 ggplot() +
-  geom_sf(data = PicoBonito, color = "darkgreen", size=1.5) +
-  geom_sf(data=pico_16km2_grid_hex, fill=NA, color = "darkblue", size=2)+
+  geom_sf(data=pico_16km2_grid_isect, fill=NA, color = "darkblue", size=2)+
+  geom_sf(data = PicoBonito, color = "darkgreen", fill=NA, size=1.5) +
   geom_sf(data=random_points, color = "purple", size=2)+
-  ggtitle("Two Random Pts Per Hexagon Cell in Pico Bonito NP")
+  ggtitle("Two Random Pts Per Grid Cell in Pico Bonito NP")
 
 #let's save these points to a .csv
 st_write(random_points, "RandomPoints_PicoBonito.csv", layer_options = "GEOMETRY=AS_XY", append=F)
