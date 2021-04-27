@@ -7,7 +7,6 @@ setwd("C:/Users/lspetrac/Desktop/Geospatial_Analysis_in_R")
 library(sf)
 library(sp)
 library(ggplot2)
-library(dplyr)
 library(raster)
 library(rgeos)
 
@@ -158,7 +157,7 @@ plot(roads_hwange[1])
 #for distance to linear features (roads), let's use rgeos package and its gDistance function
 #the steps may seem convoluted, but they get the job done
 #first, we create empty raster of a certain resolution & extent such that we can *eventually* store our distances there
-dist_road <-  raster(extent(veg_reclass), res=250, crs="+init=epsg:32735")
+dist_road <-  raster(extent(veg_crop), res=250, crs="+init=epsg:32735")
 #need to make roads a spatial object in package sp
 roads_sp <- as(roads_hwange,"Spatial")
 #let's see what they look like
@@ -182,7 +181,7 @@ plot(roads_hwange[1], col="black",lwd=2,add=T)
 
 #now let's calculate distance from points in package raster
 #creating another empty raster
-s <- raster(extent(veg_reclass), res=250, crs="+init=epsg:32735")
+s <- raster(extent(veg_crop), res=250, crs="+init=epsg:32735")
 #calculating distance from points (waterholes) using "distanceFromPoints" function
 dist_waterhole <- distanceFromPoints(s, st_coordinates(waterholes))
 #plotting the output

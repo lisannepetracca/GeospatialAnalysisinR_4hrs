@@ -42,18 +42,23 @@ crs(distwater)
 
 #let's plot it
 plot(distwater)
+
 #looks good & already in UTM 35S, yay!
 
 #let's ensure the rasters align
 distwater_align <- resample(distwater, elev, method="bilinear")
 stack <- stack(elev, distwater_align)
 
+plot(stack)
+
 #will need to make the random points a spatial object to use extract() function
 random_pts_sp <- as(random_points,"Spatial")
 
 #let's extract mean values for elevation and distance to waterhole for these buffers
 #note that you do not use a "method" argument here, only a "fun" argument to take the mean
-raster_values <- extract(stack, random_pts_sp, buffer=1000, fun = mean, df=T)
+#another note that I am using "raster::extract" here to pull the extract function specifically
+#from the raster package, as this is a common package function and I don't want to confuse R
+raster_values <- raster::extract(stack, random_pts_sp, buffer=500, fun=mean, df=T)
 
 #write these values to a .csv
 write.csv(raster_values, "elev_distwater_hwange.csv")
