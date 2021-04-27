@@ -85,8 +85,8 @@ plot(st_geometry(candat),col=as.factor(candat$species),pch=16)
 #Well that is not a great looking map, lets make better ones using ggplot 
 
 #load global country boundaries shapefile
-
 world <- ne_countries(scale = "medium", returnclass = "sf")
+
 #Or read in directly
 #world<-st_read("Part 6 Data/world.shp")
 
@@ -122,7 +122,7 @@ ggplot(data = world)+
 
 
 #plot Canidae Richness
-map<-  ggplot(data = world)+
+ggplot(data = world)+
               geom_sf(color = "black", fill = "antiquewhite", size=0.5) +
               #convert points to binned hexagons
               stat_summary_hex(
@@ -151,15 +151,14 @@ map<-  ggplot(data = world)+
               scale_x_continuous(limits = c(-150,150), breaks=(seq(-180,180,50)))+
               scale_y_continuous(limits = c(-65,75), breaks=(seq(-180,180,50)))+
               coord_sf()
-  plot(map) # plot the map in the R environment
-  
+
   
   
 #For US only and add labels
 
 #make lables
-  world_points<- st_centroid(world)
   world_points <- cbind(world, st_coordinates(st_centroid(world$geometry)))
+  #ignore error here but ideally convert projection to meters 
   
 ggplot(data = world)+
     geom_sf(color = "black", fill = "antiquewhite", size=0.5) +

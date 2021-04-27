@@ -19,7 +19,7 @@ library(ggspatial)
 HwangeNP <- st_read("Example_Zimbabwe/Hwange_NP.shp")
 #then our roads (line)
 roads <- st_read("Example_Zimbabwe/ZWE_roads.shp")
-#then our waterholes (point)
+#then our waterholes (point) - we will need to extract only Hwange NP roads later
 waterholes <- st_read("Example_Zimbabwe/waterholes.shp")
 
 #do the coordinate systems match? let's see
@@ -34,11 +34,15 @@ roads <- st_transform(roads, crs = 32735)
 roads_isect <- roads[HwangeNP,]
 
 #and now let's plot what we have
+#ggplot() - initializes a ggplot object
 ggplot() +
+  #geom_sf() - allows visualization of sf objects
   geom_sf(data = HwangeNP, color = "darkgreen", fill = "white", size=2) +
   geom_sf(data=roads_isect, color = "black", size=1)+
   geom_sf(data=waterholes, color= "blue", size=3)+
+  #ggtitle() - provides title (and optional subtitle)
   ggtitle("Roads and Waterholes in Hwange NP", subtitle = "2020")+
+  #coord_sf() - ensures all layers use common crs
   coord_sf()
 
 #let's add a legend object, with "TYPE" of waterhole in the legend
@@ -46,11 +50,13 @@ ggplot() +
 unique(waterholes$TYPE)
 
 #we are making two small changes here
-#the "aes" argument tells ggplot to apply a different color to each value of waterhole TYPE
-#"labs" in this case gives a title to the legend
 ggplot() +
   geom_sf(data = HwangeNP, color = "darkgreen", fill = "white", size=2) +
-  geom_sf(data=waterholes, aes(color=factor(TYPE)), size=3)+
+  geom_sf(data=waterholes, 
+          #the "aes" argument tells ggplot to apply a different color to each value of waterhole TYPE
+          aes(color=factor(TYPE)),
+          size=3)+
+  #"labs" in this case gives a title to the legend
   labs(color = 'Waterhole type')+
   ggtitle("Waterhole types in Hwange NP", subtitle = "2020")
   
@@ -64,6 +70,7 @@ ggplot() +
   geom_sf(data = HwangeNP, color = "darkgreen", fill = "white", size=2) +
   geom_sf(data=roads_isect, color = "black", size=1)+
   geom_sf(data=waterholes, aes(color=factor(TYPE)), size=3)+
+  #give ggplot these colors
   scale_color_manual(values=waterhole_colors)+
   labs(color = 'Waterhole type')+
   ggtitle("Waterhole types in Hwange NP", subtitle = "2020")+
@@ -85,7 +92,7 @@ ggplot() +
   coord_sf()
 
 #ok, so that's great for plotting a single shapefile
-#what if we are interested in plotting multiple shapefiles?
+#what if we are interested in having multiple shapefiles listed in the legend?
 
 #let's go back to our original map with the polygon, lines, and points
 ggplot() +
@@ -105,8 +112,11 @@ ggplot() +
   scale_fill_manual(values = "black", name = "")+
   ggtitle("Roads and Waterholes in Hwange NP", subtitle = "2020")+
   coord_sf()
+#note "fill" defines color with which a geom is filled & "color" defines outline
+#most points only have a color and no fill
 
-#Let's make the waterholes diamonds instead of circles
+
+#Interested in changing the shape of points?
 #see https://ggplot2.tidyverse.org/articles/ggplot2-specs.html for a lot of ggplot aesthetics
 
 #### ---- INCLUDING RASTER DATA ----####
@@ -127,38 +137,44 @@ head(elev_df)   #IT IS OK THAT THERE ARE NAs
 #now we can get started
 
 #man, we have NA values. where are they? 
-#we can use "na.value = "color"" to show where those pixels are
+
 ggplot() +
   geom_raster(data = elev_df  , aes(x = x, y = y,fill=elev_df[,3])) +
-  scale_fill_viridis_c(na.value = 'red') 
+  #we can use "na.value = "color"" to show where those pixels are  
+  #brief aside on Viridis - package with nice color templates
+  #color blind Friendly
+  #see:https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
+  scale_fill_viridis_c(na.value = 'red',option="H") 
 
 #ok, they are some border cells
 #can use trim() argument in raster package to get rid of these cells, but we're ok for now
 #trim gets rid of NAs in the outer rows and columns 
 
-#one trick of getting around NAs is removing those rows where the raster value is NA
+#one trick of getting around NAs is removing those rows in the data frame where the raster value is NA
 #otherwise NA will show up in the legend & this is annoying
 elev_df <- elev_df[!is.na(elev_df[,3]), ]
 
 ggplot() +
   geom_raster(data = elev_df, aes(x = x, y = y, fill = elev_df[,3]))+
-  scale_fill_viridis_c(na.value = 'red') 
+  scale_fill_viridis_c(na.value = 'red',option="H") 
+#Looking great!
 
-
-#we are using the viridis color palette for the continuous surface
-ggplot() +
-  geom_raster(data = elev_df, aes(x = x, y = y, fill=elev_df[,3])) +
-  scale_fill_viridis_c(option="H") 
 
 #and how would we change some aesthetics?
-#let's change legend name
-#move legend theme to bottom
-#adjust size of legend name and labels
+#change legend title
+#change text of legend labels
+#remove x and y axis labels
+
 ggplot() +
   geom_raster(data = elev_df, aes(x = x, y = y, fill=elev_df[,3])) +
-  scale_fill_viridis_c(option="H",name = "Elevation (m)") +
-  theme(axis.title = element_blank(),
+  #let's change legend name
+    scale_fill_viridis_c(option="H",name = "Elevation (m)") +
+  theme(
+        #remove x and y axis titles    
+        axis.title = element_blank(),
+        #move legend theme to bottom
         legend.position = "bottom",
+        #adjust size of legend name and labels
         legend.title=element_text(size=12),
         legend.text = element_text(size = 10), 
         legend.box.background = element_rect(size = 1))
@@ -175,6 +191,7 @@ ggplot() +
   geom_sf(data=waterholes, aes(color=factor(TYPE)), size=3)+
   scale_fill_viridis_c(option='H',name = "Elevation (m)")+
   scale_color_manual(values = waterhole_colors, name = "Waterhole type") +
+  #Adding in coord_sf() to display coordinates in decimal degrees
   coord_sf()
 
 
