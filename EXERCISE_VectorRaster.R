@@ -56,6 +56,8 @@ random_pts_sp <- as(random_points,"Spatial")
 
 #let's extract mean values for elevation and distance to waterhole for these buffers
 #note that you do not use a "method" argument here, only a "fun" argument to take the mean
+#another note that I am using "raster::extract" here to pull the extract function specifically
+#from the raster package, as this is a common package function and I don't want to confuse R
 raster_values <- raster::extract(stack, random_pts_sp, buffer=500, fun=mean, df=T)
 
 #write these values to a .csv
