@@ -1,6 +1,6 @@
 library(raster)
 library(sf)
-setwd("C:/Users/acheesem/Desktop/ESF/Classes Taught/GIS in R workshop/AM Exercise")
+setwd("C:/Users/acheesem/Desktop/ESF/Classes Taught/Geospatial Analysis in R/Exercise_1_Answers")
 ras<-raster("moon.tif")
 plot(ras)
 

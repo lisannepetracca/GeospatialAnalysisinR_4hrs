@@ -12,7 +12,7 @@ library(rnaturalearthdata)
 
 ##DO NOT COPY PASTE ENTIRE LINE FOR 17 NEED 'wd<-' PRESERVED!!!
 #Make sure working directory is also saved as object wd
-setwd("C:/Users/acheesem/Desktop/ESF/Workshop Taught/GIS in R workshop")#Change to your working directory path
+setwd("C:/Users/acheesem/Desktop/ESF/Workshop Taught/Geospatial Analysis in R")#Change to your working directory path
 
 ################################################################
 ################################################################
@@ -40,7 +40,7 @@ NY<-st_read("NYS_Civil_Boundaries_SHP/Counties_Shoreline.shp")#this one is neste
 plot(st_geometry(NY)) 
 
 #read in from file
-#NY<-st_read("Part 6 Data/NYS_Civil_Boundaries_SHP/Counties_Shoreline.shp")#this one is nested in another folder
+#NY<-st_read("NYS_Civil_Boundaries_SHP/Counties_Shoreline.shp")#this one is nested in another folder
 ###########################################################
 ######################GBIF Exercise ###Map species
 
@@ -65,7 +65,7 @@ write.csv(Canidae$data,"Canidae_occ.csv")
 #data is in tibble which is a modified data frame- lets change it to data frame to be consistent and store it in candat
 can<-data.frame(Canidae$data)
 
-#candat<-read.csv("Part 6 Data/Canidae_occ.csv") #OR JUST READ IN CSV
+#candat<-read.csv("Example_Canidae/Canidae_occ.csv") #OR JUST READ IN CSV
 
 #look at data
 summary(can)

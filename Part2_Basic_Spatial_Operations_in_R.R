@@ -2,7 +2,7 @@
 library(sp)
 library(sf)
 library(raster)
-setwd("C:/Users/acheesem/Desktop/ESF/Workshop Taught/GIS in R workshop")#Change to your working directory path
+setwd("C:/Users/acheesem/Desktop/ESF/Workshop Taught/Geospatial Analysis in R")#Change to your working directory path
 
 ###CAN WORK WITH SPATIAL DATA AS DATA FRAME 
 ##create unprojected spatial data 
@@ -32,7 +32,7 @@ plot(pts)
 
 ##Create spatialpointsdataframe
 #Create attributes corresponding to the row from data 
-  #(alternitively you would pull from your database/csv etc.)
+  #(alternatively you would pull from your database/csv etc.)
   # here creating sites pond, river, and forest, and ID for each row in data
 att<-data.frame(site=c("Pond","River","Forest"),ID=1:nrow(data))
 #look at att
@@ -42,7 +42,7 @@ att
 #how do we do this?
 ?SpatialPointsDataFrame# use the ? before a function to see which arguments are needed and their format!! 
 #really great for determining if sp or sf objects are required
-spdf<-SpatialPointsDataFrame(pts,data=att,proj4string = crdref)
+spdf<-SpatialPointsDataFrame(pts,data=att)
 
 
 #look at spdf

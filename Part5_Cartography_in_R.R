@@ -1,7 +1,7 @@
 #install.packages(c("sf","raster","ggplot2", "viridis","ggspatial"))
 
 #let's set our working directory first
-setwd("C:/Users/acheesem/Desktop/ESF/Workshop Taught/GIS in R workshop")#Change to your working directory path
+setwd("C:/Users/acheesem/Desktop/ESF/Workshop Taught/Geospatial Analysis in R")#Change to your working directory path
 
 #and let's load all the libraries we need
 library(sf)
