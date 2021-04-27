@@ -76,7 +76,7 @@ nrow(BigPAs)
 #now let's add an outline of honduras, shall we?
 #fun little preview of using online data to get boundaries of countries (can do US states too!)
 countries <- ne_download(scale = "large", type = 'countries', returnclass="sf" )
-#if this line DOES NOT WORK, skip to L. 93, remove the #, and run that line
+#if this line DOES NOT WORK, skip to L. 86, remove the #, and run that line
 
 names(countries)
 #let's grab honduras from this sf object
