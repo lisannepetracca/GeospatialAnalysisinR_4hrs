@@ -45,7 +45,11 @@ plot(distwater)
 
 #looks good & already in UTM 35S, yay!
 
-#let's ensure the rasters align
+#do the rasters have the same extent?
+extent(elev)
+extent(distwater)
+
+#they don't, so let's align them with resample
 distwater_align <- resample(distwater, elev, method="bilinear")
 stack <- stack(elev, distwater_align)
 
